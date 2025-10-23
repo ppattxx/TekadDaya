@@ -36,7 +36,7 @@ export default function CartPage() {
   };
 
   const handleClearCart = () => {
-    if (window.confirm("Are you sure you want to clear your cart?")) {
+    if (window.confirm("Apakah Anda yakin ingin mengosongkan keranjang?")) {
       if (localStorage.getItem("auth_token")) {
         clearCart.mutate();
       } else {
@@ -50,11 +50,11 @@ export default function CartPage() {
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-20 pb-16 lg:pb-20 xl:pb-24">
         <div className="text-center">
           <ShoppingBag className="mx-auto h-24 w-24 lg:h-32 lg:w-32 xl:h-40 xl:w-40 text-gray-300" />
-          <h2 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 mt-6 lg:mt-8 xl:mt-10">Your cart is empty</h2>
-          <p className="text-gray-600 lg:text-lg xl:text-xl mt-2 mb-8 lg:mt-4 lg:mb-10 xl:mt-6 xl:mb-12">Looks like you haven't added any items to your cart yet.</p>
-          <Link to="/products" className="btn-primary inline-flex items-center">
+          <h2 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 mt-6 lg:mt-8 xl:mt-10">Keranjang Anda kosong</h2>
+          <p className="text-gray-600 lg:text-lg xl:text-xl mt-2 mb-8 lg:mt-4 lg:mb-10 xl:mt-6 xl:mb-12">Sepertinya Anda belum menambahkan produk ke keranjang.</p>
+          <Link to="/products" className="btn-primary inline-flex items-center bg-amber-600 hover:bg-amber-700 text-white">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Continue Shopping
+            Lanjutkan Belanja
           </Link>
         </div>
       </div>
@@ -65,9 +65,9 @@ export default function CartPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white pt-16 sm:pt-18 lg:pt-20">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-3 sm:gap-0">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900">Shopping Cart</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900">Keranjang Belanja</h1>
           <button onClick={handleClearCart} className="text-red-600 hover:text-red-700 text-sm sm:text-base font-medium self-start sm:self-auto">
-            Clear Cart
+            Kosongkan Keranjang
           </button>
         </div>
 
@@ -75,7 +75,7 @@ export default function CartPage() {
           <div className="lg:col-span-8">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200/50">
               <div className="px-4 sm:px-6 py-4 border-b border-slate-200/50">
-                <h2 className="text-base sm:text-lg font-medium text-slate-900">Cart Items ({state.cart.itemCount})</h2>
+                <h2 className="text-base sm:text-lg font-medium text-slate-900">Item Keranjang ({state.cart.itemCount})</h2>
               </div>
 
               <div className="divide-y divide-slate-200/50">
@@ -133,28 +133,28 @@ export default function CartPage() {
             <div className="mt-6">
               <Link to="/products" className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Continue Shopping
+                Lanjutkan Belanja
               </Link>
             </div>
           </div>
 
           <div className="lg:col-span-4 mt-8 lg:mt-0">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-24">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Order Summary</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Ringkasan Pesanan</h2>
 
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal ({state.cart.itemCount} items)</span>
+                  <span className="text-gray-600">Subtotal ({state.cart.itemCount} item)</span>
                   <span className="text-gray-900">{formatPrice(state.cart.total)}</span>
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="text-gray-900">{state.cart.total >= 100000 ? "Free" : formatPrice(15000)}</span>
+                  <span className="text-gray-600">Ongkir</span>
+                  <span className="text-gray-900">{state.cart.total >= 100000 ? "Gratis" : formatPrice(15000)}</span>
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tax</span>
+                  <span className="text-gray-600">Pajak</span>
                   <span className="text-gray-900">{formatPrice(state.cart.total * 0.1)}</span>
                 </div>
 
@@ -168,31 +168,31 @@ export default function CartPage() {
 
               {state.cart.total >= 100000 && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-700">🎉 You qualify for free shipping!</p>
+                  <p className="text-sm text-green-700">🎉 Anda mendapat ongkir gratis!</p>
                 </div>
               )}
 
               <div className="mt-6 space-y-3">
                 {state.isAuthenticated ? (
                   <Link to="/checkout" className="w-full btn-primary text-center block">
-                    Proceed to Checkout
+                    Lanjut ke Pembayaran
                   </Link>
                 ) : (
                   <div className="space-y-3">
                     <Link to="/login?redirect=checkout" className="w-full btn-primary text-center block">
-                      Login to Checkout
+                      Masuk untuk Checkout
                     </Link>
                     <p className="text-xs text-gray-600 text-center">
-                      Or{" "}
+                      Atau{" "}
                       <Link to="/register" className="text-blue-600 hover:text-blue-700">
-                        create an account
+                        buat akun
                       </Link>{" "}
-                      to save your cart
+                      untuk menyimpan keranjang
                     </p>
                   </div>
                 )}
 
-                <button className="w-full btn-secondary">Save for Later</button>
+                <button className="w-full btn-secondary">Simpan untuk Nanti</button>
               </div>
             </div>
           </div>

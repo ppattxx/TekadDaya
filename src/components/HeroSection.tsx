@@ -19,11 +19,11 @@ export default function HeroSection({ searchQuery, setSearchQuery, isScrolled }:
       <div className="relative z-10 h-full flex flex-col items-center justify-center px-3 sm:px-4 md:px-6 lg:px-8">
         <div className={`text-center mb-6 sm:mb-8 lg:mb-10 transition-all duration-500 ease-in-out ${isScrolled ? "opacity-0 transform translate-y-8 pointer-events-none" : "opacity-100 transform translate-y-0"}`}>
           <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-3 sm:mb-4 lg:mb-6 tracking-tight">
-            <span className="block">TEKAD DAYA</span>
-            <span className="block text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-normal text-blue-100 mt-1 sm:mt-2">Plastic E-Commerce Solutions</span>
+            <span className="block">BELI BOTOL</span>
+            {/* <span className="block text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-normal text-blue-100 mt-1 sm:mt-2"></span> */}
           </h1>
           <p className="text-sm sm:text-base md:text-lg lg:text-xl text-blue-100 max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto leading-relaxed px-2 sm:px-0">
-            Discover premium quality products with unmatched reliability and professional service
+            Temukan produk berkualitas premium dengan keandalan tak tertandingi dan layanan profesional
           </p>
         </div>
 
@@ -40,14 +40,14 @@ export default function HeroSection({ searchQuery, setSearchQuery, isScrolled }:
                   <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4 sm:h-5 sm:w-5" />
                   <input
                     type="text"
-                    placeholder="Search for premium products..."
+                    placeholder="Cari produk... "
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 text-sm sm:text-base lg:text-lg bg-transparent border-none focus:outline-none text-slate-700 placeholder-slate-400"
                   />
                 </div>
                 <button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-md sm:rounded-lg text-sm sm:text-base font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 whitespace-nowrap">
-                  Search
+                  Cari
                 </button>
               </div>
             </div>
@@ -59,15 +59,15 @@ export default function HeroSection({ searchQuery, setSearchQuery, isScrolled }:
         >
           <div className="flex items-center space-x-2">
             <Shield className="h-5 w-5 text-amber-400" />
-            <span className="text-sm font-medium">Secure Shopping</span>
+            <span className="text-sm font-medium">Belanja Aman</span>
           </div>
           <div className="flex items-center space-x-2">
             <Award className="h-5 w-5 text-amber-400" />
-            <span className="text-sm font-medium">Premium Quality</span>
+            <span className="text-sm font-medium">Kualitas Premium</span>
           </div>
           <div className="flex items-center space-x-2">
             <Users className="h-5 w-5 text-amber-400" />
-            <span className="text-sm font-medium">10K+ Satisfied Customers</span>
+            <span className="text-sm font-medium">10K+ Pelanggan Puas</span>
           </div>
         </div>
       </div>

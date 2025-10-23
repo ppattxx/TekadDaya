@@ -47,6 +47,11 @@ export default function ProductDetailPage() {
     }
   };
 
+  const handleProductClick = (productId: number) => {
+    window.scrollTo(0, 0);
+    navigate(`/products/${productId}`);
+  };
+
   const handleBack = () => {
     navigate(-1);
   };
@@ -55,7 +60,7 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Memuat detail produk...</p>
         </div>
       </div>
@@ -67,7 +72,7 @@ export default function ProductDetailPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Produk tidak ditemukan</h2>
-          <button onClick={() => navigate("/products")} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <button onClick={() => navigate("/products")} className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 transition-colors">
             Kembali ke Produk
           </button>
         </div>
@@ -110,7 +115,7 @@ export default function ProductDetailPage() {
 
           <div className="space-y-6">
             <div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">Rp{product.harga.toLocaleString("id-ID")}</div>
+              <div className="text-3xl font-bold text-amber-600 mb-2">Rp{product.harga.toLocaleString("id-ID")}</div>
               <h1 className="text-2xl font-semibold text-gray-900 leading-tight">{product.name}</h1>
             </div>
 
@@ -123,7 +128,7 @@ export default function ProductDetailPage() {
                       key={variant.id}
                       onClick={() => setSelectedVariant(variant)}
                       className={`px-3 py-2 text-sm font-medium rounded-lg border transition-all ${
-                        selectedVariant?.id === variant.id ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                        selectedVariant?.id === variant.id ? "border-amber-500 bg-amber-50 text-amber-700" : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
                       {variant.name}
@@ -151,11 +156,11 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-              <button onClick={handleAddToCart} className="flex-1 flex items-center justify-center px-6 py-3 border border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors">
+              <button onClick={handleAddToCart} className="flex-1 flex items-center justify-center px-6 py-3 border border-amber-600 text-amber-600 font-medium rounded-lg hover:bg-amber-50 transition-colors">
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                Keranjang
+                Tambah ke Keranjang
               </button>
-              <button onClick={handleBuyNow} className="flex-1 flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              <button onClick={handleBuyNow} className="flex-1 flex items-center justify-center px-6 py-3 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition-colors">
                 <CreditCard className="h-5 w-5 mr-2" />
                 Beli Sekarang
               </button>
@@ -204,7 +209,7 @@ export default function ProductDetailPage() {
               .map((otherProduct) => (
                 <div
                   key={otherProduct.id}
-                  onClick={() => navigate(`/products/${otherProduct.id}`)}
+                  onClick={() => handleProductClick(otherProduct.id)}
                   className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-slate-200/50 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer"
                 >
                   <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">

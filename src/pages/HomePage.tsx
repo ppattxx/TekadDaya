@@ -35,33 +35,33 @@ export default function HomePage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12">
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 xl:gap-12">
-            <aside className="w-full lg:w-72 xl:w-80 2xl:w-96 flex-shrink-0">
-              <div className="lg:sticky lg:top-24 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/50 p-4 sm:p-6 lg:p-8 xl:p-10">
-                <h3 className="font-bold text-slate-800 mb-4 lg:mb-6 text-lg sm:text-xl xl:text-2xl">Categories</h3>
+            <aside className="w-full lg:w-60 xl:w-64 flex-shrink-0">
+              <div className="lg:sticky lg:top-24 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200/50 p-2 sm:p-3 lg:p-4">
+                <h3 className="font-bold text-slate-800 mb-2 lg:mb-3 text-sm sm:text-base">Kategori</h3>
 
-                <div className="flex flex-row lg:flex-col gap-3 lg:gap-4 xl:gap-6 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
-                  <label className="flex items-center cursor-pointer hover:bg-slate-50 p-2 sm:p-3 lg:p-4 rounded-xl transition-all group whitespace-nowrap lg:whitespace-normal">
+                <div className="flex flex-row lg:flex-col gap-1.5 lg:gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
+                  <label className="flex items-center cursor-pointer hover:bg-slate-50 p-1.5 sm:p-2 rounded-md transition-all group whitespace-nowrap lg:whitespace-normal">
                     <input
                       type="radio"
                       name="category"
                       value=""
                       checked={selectedCategory === ""}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="text-amber-600 focus:ring-amber-500 focus:ring-2 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 flex-shrink-0"
+                      className="text-amber-600 focus:ring-amber-500 focus:ring-2 w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0"
                     />
-                    <span className="ml-2 sm:ml-3 lg:ml-4 xl:ml-5 text-slate-700 text-sm sm:text-base lg:text-lg xl:text-xl font-medium group-hover:text-amber-600 transition-colors">All Products</span>
+                    <span className="ml-1.5 sm:ml-2 text-slate-700 text-xs sm:text-sm font-medium group-hover:text-amber-600 transition-colors">Semua Produk</span>
                   </label>
 
-                  <label className="flex items-center cursor-pointer hover:bg-slate-50 p-2 sm:p-3 lg:p-4 rounded-xl transition-all group whitespace-nowrap lg:whitespace-normal">
+                  <label className="flex items-center cursor-pointer hover:bg-slate-50 p-1.5 sm:p-2 rounded-md transition-all group whitespace-nowrap lg:whitespace-normal">
                     <input
                       type="radio"
                       name="category"
                       value="Botol Plastik"
                       checked={selectedCategory === "Botol Plastik"}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="text-amber-600 focus:ring-amber-500 focus:ring-2 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 flex-shrink-0"
+                      className="text-amber-600 focus:ring-amber-500 focus:ring-2 w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0"
                     />
-                    <span className="ml-2 sm:ml-3 lg:ml-4 xl:ml-5 text-slate-700 text-sm sm:text-base lg:text-lg xl:text-xl font-medium group-hover:text-amber-600 transition-colors">Plastic Products</span>
+                    <span className="ml-1.5 sm:ml-2 text-slate-700 text-xs sm:text-sm font-medium group-hover:text-amber-600 transition-colors">Produk Plastik</span>
                   </label>
                 </div>
               </div>
@@ -70,21 +70,21 @@ export default function HomePage() {
             <main className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 lg:mb-8 xl:mb-10 gap-3 sm:gap-4 lg:gap-6">
                 <p className="text-slate-600 text-sm sm:text-base lg:text-lg xl:text-xl font-medium">
-                  Showing 1-{Math.min(6, filteredProducts.length)} of {totalProducts.toLocaleString()} premium products
+                  Menampilkan 1-{Math.min(6, filteredProducts.length)} of {totalProducts.toLocaleString()} premium produk
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 lg:space-x-6 xl:space-x-8">
-                  <span className="text-slate-600 text-sm sm:text-base lg:text-lg font-medium">Sort by</span>
+                  <span className="text-slate-600 text-sm sm:text-base lg:text-lg font-medium">Urutkan</span>
                   <div className="relative w-full sm:w-auto min-w-[180px] sm:min-w-[200px] lg:min-w-[240px]">
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                       className="w-full appearance-none bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl pl-3 pr-8 sm:pl-4 sm:pr-10 lg:pl-5 lg:pr-12 py-2 sm:py-2.5 lg:py-3 xl:py-4 text-sm sm:text-base lg:text-lg focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all shadow-sm hover:shadow-md text-slate-700"
                     >
-                      <option value="relevant">Most Relevant</option>
-                      <option value="price_low">Price: Low to High</option>
-                      <option value="price_high">Price: High to Low</option>
-                      <option value="newest">Newest First</option>
+                      <option value="relevant">Paling relevan</option>
+                      <option value="price_low">Harga: rendah ke tinggi</option>
+                      <option value="price_high">Harga: tinggi ke rendah</option>
+                      <option value="newest">Terbaru</option>
                     </select>
                     <ChevronDown className="absolute right-2 sm:right-3 lg:right-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-slate-400 pointer-events-none" />
                   </div>
@@ -115,7 +115,7 @@ export default function HomePage() {
                           )}
                           {product.berat && (
                             <p className="flex items-center justify-between">
-                              <span className="font-medium text-slate-500">Weight:</span>
+                              <span className="font-medium text-slate-500">Berat:</span>
                               <span className="font-semibold">{product.berat}</span>
                             </p>
                           )}
@@ -127,13 +127,13 @@ export default function HomePage() {
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between mt-auto bg-slate-50 -mx-8 -mb-8 px-8 py-4 min-h-[60px]">
-                          <div className="text-xl font-bold text-amber-600 whitespace-nowrap flex-shrink-0">Rp {product.harga.toLocaleString("id-ID")}</div>
+                        <div className="flex items-center justify-between mt-auto bg-slate-50 -mx-8 -mb-8 px-4 lg:px-6 xl:px-8 py-3 lg:py-4 min-h-[60px] gap-2 lg:gap-4">
+                          <div className="text-lg lg:text-xl font-bold text-amber-600 flex-shrink-0">Rp {product.harga.toLocaleString("id-ID")}</div>
                           <button
                             onClick={(e) => handleAddToCart(e, product)}
-                            className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap flex-shrink-0 ml-4"
+                            className="bg-amber-500 hover:bg-amber-600 text-white px-3 lg:px-4 xl:px-6 py-2 lg:py-2.5 rounded-lg text-xs lg:text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0"
                           >
-                            Buy Now
+                            Tambah +
                           </button>
                         </div>
                       </div>

@@ -23,7 +23,6 @@ export default function Navbar() {
   };
 
   const navigationItems = [
-    { name: "Beranda", href: "/homepage", icon: null },
     { name: "Kategori", href: "/categories", icon: Grid3X3 },
     { name: "Semua Produk", href: "/products", icon: Package2 },
   ];
@@ -43,13 +42,13 @@ export default function Navbar() {
             <Link to="/" className="flex items-center space-x-1.5 sm:space-x-3">
               <img
                 src="/src/assets/logo.png"
-                alt="TekadDaya Logo"
+                alt="BeliBotol Logo"
                 className="h-6 w-6 sm:h-8 sm:w-8 object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                 }}
               />
-              <span className="text-base sm:text-xl font-bold text-gray-900 truncate">TekadDaya</span>
+              <span className="text-base sm:text-xl font-bold text-gray-900 truncate">BeliBotol</span>
             </Link>
 
             <div className="hidden md:flex items-center space-x-1">
@@ -79,7 +78,7 @@ export default function Navbar() {
                   <Search className="absolute left-3 lg:left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4 lg:h-5 lg:w-5" />
                   <input
                     type="text"
-                    placeholder="Search products..."
+                    placeholder="Cari produk..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 lg:pl-12 pr-3 lg:pr-4 py-2 lg:py-3 border border-slate-200 rounded-full focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md text-slate-700 placeholder-slate-400 text-sm lg:text-base"
@@ -125,14 +124,14 @@ export default function Navbar() {
               ) : (
                 <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
                   <Link to="/login" className="text-slate-600 hover:text-slate-700 text-xs sm:text-sm font-medium transition-colors px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-slate-50">
-                    Sign In
+                    Masuk
                   </Link>
                   <Link
                     to="/register"
                     className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
-                    <span className="hidden sm:block">Sign Up</span>
-                    <span className="sm:hidden">Register</span>
+                    <span className="hidden sm:block">Daftar</span>
+                    <span className="sm:hidden">Daftar</span>
                   </Link>
                 </div>
               )}
@@ -150,7 +149,7 @@ export default function Navbar() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Cari produk..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-full focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none bg-white/80 backdrop-blur-sm shadow-sm text-slate-700 placeholder-slate-400 text-sm"
@@ -183,14 +182,14 @@ export default function Navbar() {
             {!state.isAuthenticated && (
               <div className="pt-4 mt-4 border-t border-slate-200/50 space-y-2">
                 <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-slate-800 hover:bg-slate-50 transition-all">
-                  Sign In
+                  Masuk
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block px-4 py-3 rounded-lg text-base font-medium text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg"
                 >
-                  Sign Up
+                  Daftar
                 </Link>
               </div>
             )}

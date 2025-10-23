@@ -18,8 +18,8 @@ export function NavigationSidebar() {
     <div className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 shadow-sm z-40">
       <div className="flex flex-col h-full">
         <div className="flex items-center p-6 border-b border-gray-200">
-          <img src="/src/assets/logo.png" alt="TekadDaya Logo" className="w-8 h-8 object-contain" />
-          <span className="ml-3 text-xl font-bold text-gray-900">TekadDaya</span>
+          <img src="/src/assets/logo.png" alt="BeliBotol Logo" className="w-8 h-8 object-contain" />
+          <span className="ml-3 text-xl font-bold text-gray-900">BeliBotol</span>
         </div>
 
         <nav className="flex-1 p-4">

@@ -12,8 +12,8 @@ export default function StandardHeader() {
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="flex items-center gap-4 h-16 lg:h-18 xl:h-20">
           <Link to="/" className="flex items-center space-x-2 lg:space-x-3 xl:space-x-4 flex-shrink-0">
-            <img src="/src/assets/logo.png" alt="TekadDaya Logo" className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 object-contain" />
-            <span className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 hidden sm:block">TekadDaya</span>
+            <img src="/src/assets/logo.png" alt="BeliBotol Logo" className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 object-contain" />
+            <span className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 hidden sm:block">BeliBotol</span>
             <span className="text-sm font-bold text-gray-900 sm:hidden">TD</span>
           </Link>
 
