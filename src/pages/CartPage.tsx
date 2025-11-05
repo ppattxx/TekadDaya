@@ -1,13 +1,28 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
 import { useAppStore, actions } from "../store/AppContext";
-import { useUpdateCartItem, useRemoveFromCart, useClearCart } from "../hooks/useApi";
+import { cartAPI } from "../services/api";
 
 export default function CartPage() {
   const { state, dispatch } = useAppStore();
-  const updateCartItem = useUpdateCartItem();
-  const removeFromCart = useRemoveFromCart();
-  const clearCart = useClearCart();
+
+  useEffect(() => {
+    const syncCart = async () => {
+      if (state.isAuthenticated) {
+        try {
+          const response = await cartAPI.getCart();
+          if (response.status === "success" && response.data) {
+            // Update local cart with server cart
+          }
+        } catch (error) {
+          // Silent fail - cart will use local storage
+        }
+      }
+    };
+
+    syncCart();
+  }, [state.isAuthenticated]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -17,28 +32,43 @@ export default function CartPage() {
     }).format(price);
   };
 
-  const handleQuantityChange = (itemId: number, productId: number, newQuantity: number) => {
+  const handleQuantityChange = async (itemId: number, productId: number, newQuantity: number) => {
     if (newQuantity < 1) return;
 
-    if (localStorage.getItem("auth_token")) {
-      updateCartItem.mutate({ id: productId, quantity: newQuantity });
+    if (state.isAuthenticated) {
+      try {
+        await cartAPI.updateQuantity(productId, newQuantity);
+        dispatch(actions.updateCartItem(itemId, newQuantity));
+      } catch (error) {
+        dispatch(actions.updateCartItem(itemId, newQuantity));
+      }
     } else {
       dispatch(actions.updateCartItem(itemId, newQuantity));
     }
   };
 
-  const handleRemoveItem = (itemId: number, productId: number) => {
-    if (localStorage.getItem("auth_token")) {
-      removeFromCart.mutate(productId);
+  const handleRemoveItem = async (itemId: number, productId: number) => {
+    if (state.isAuthenticated) {
+      try {
+        await cartAPI.removeFromCart(productId);
+        dispatch(actions.removeFromCart(itemId));
+      } catch (error) {
+        dispatch(actions.removeFromCart(itemId));
+      }
     } else {
       dispatch(actions.removeFromCart(itemId));
     }
   };
 
-  const handleClearCart = () => {
+  const handleClearCart = async () => {
     if (window.confirm("Apakah Anda yakin ingin mengosongkan keranjang?")) {
-      if (localStorage.getItem("auth_token")) {
-        clearCart.mutate();
+      if (state.isAuthenticated) {
+        try {
+          await cartAPI.clearCart();
+          dispatch(actions.clearCart());
+        } catch (error) {
+          dispatch(actions.clearCart());
+        }
       } else {
         dispatch(actions.clearCart());
       }
@@ -91,7 +121,7 @@ export default function CartPage() {
                           {item.product.name}
                         </Link>
                         <p className="text-xs sm:text-sm text-slate-500 mt-1">{item.product.category}</p>
-                        <p className="text-base sm:text-lg font-semibold text-amber-600 mt-2">{formatPrice(item.product.harga)}</p>
+                        <p className="text-base sm:text-lg font-semibold text-amber-600 mt-2">{formatPrice(item.product.harga || 0)}</p>
                       </div>
 
                       <div className="flex flex-col xs:flex-row items-start xs:items-center space-y-3 xs:space-y-0 xs:space-x-3 w-full xs:w-auto">
@@ -106,7 +136,7 @@ export default function CartPage() {
                           <span className="px-4 py-2 text-gray-900 font-medium min-w-[3rem] text-center">{item.quantity}</span>
                           <button
                             onClick={() => handleQuantityChange(item.id, item.product.id, item.quantity + 1)}
-                            disabled={item.quantity >= item.product.stock}
+                            disabled={item.quantity >= (item.product.stock || 0)}
                             className="p-2 text-gray-600 hover:text-gray-800 disabled:text-gray-300 disabled:cursor-not-allowed"
                           >
                             <Plus className="h-4 w-4" />
@@ -121,9 +151,9 @@ export default function CartPage() {
 
                     <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
                       <span className="text-sm text-gray-600">
-                        {item.quantity} × {formatPrice(item.product.harga)}
+                        {item.quantity} × {formatPrice(item.product.harga || 0)}
                       </span>
-                      <span className="text-lg font-semibold text-gray-900">{formatPrice(item.product.harga * item.quantity)}</span>
+                      <span className="text-lg font-semibold text-gray-900">{formatPrice((item.product.harga || 0) * item.quantity)}</span>
                     </div>
                   </div>
                 ))}

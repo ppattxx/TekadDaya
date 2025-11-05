@@ -1,52 +1,139 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Filter, Grid, List } from "lucide-react";
-import { mockProducts, mockCategories } from "../services/mockData";
+import { productAPI, categoryAPI } from "../services/api";
 import ProductCard from "../components/ProductCard";
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [totalProducts, setTotalProducts] = useState(0);
 
   const page = parseInt(searchParams.get("page") || "1");
   const category = searchParams.get("category") || "";
   const search = searchParams.get("search") || "";
   const sortBy = searchParams.get("sort") || "name";
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        const response = await categoryAPI.getAll();
+
+        if (!isMounted) return;
+
+        if (response.status === "success") {
+          const categoriesData = Array.isArray(response.data) ? response.data : (response.data as any).categories || [];
+          setCategories(categoriesData);
+        } else {
+          setCategories([]);
+        }
+      } catch (error: any) {
+        if (!isMounted) return;
+        setCategories([]);
+      } finally {
+        if (isMounted) {
+          setCategoriesLoading(false);
+        }
+      }
+    };
+
+    fetchCategories();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+
+        const response = await productAPI.getAll({
+          page,
+          limit: 12,
+          category: category || undefined,
+          search: search || undefined,
+        });
+
+        if (!isMounted) return;
+
+        if (response.status === "success") {
+          const productsData = Array.isArray(response.data) ? response.data : (response.data as any).products || [];
+          setProducts(productsData);
+          setTotalProducts((response as any).pagination?.total || productsData.length);
+        } else {
+          setProducts([]);
+          setTotalProducts(0);
+        }
+      } catch (error: any) {
+        if (!isMounted) return;
+        if (error.response?.status === 429) {
+          setTimeout(() => {
+            if (isMounted) {
+              fetchProducts();
+            }
+          }, 2000);
+          return;
+        }
+        setProducts([]);
+        setTotalProducts(0);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const timer = setTimeout(() => {
+      fetchProducts();
+    }, 150);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [page, category, search]);
+
   const filteredProducts = useMemo(() => {
-    let filtered = mockProducts;
+    let filtered = [...products];
 
-    if (category) {
-      filtered = filtered.filter((product) => product.category.toLowerCase() === category.toLowerCase());
-    }
-
-    if (search) {
-      filtered = filtered.filter((product) => product.name.toLowerCase().includes(search.toLowerCase()) || product.description.toLowerCase().includes(search.toLowerCase()));
-    }
-
-    filtered = [...filtered].sort((a, b) => {
+    filtered.sort((a, b) => {
       switch (sortBy) {
         case "price":
-          return a.harga - b.harga;
+          return (a.harga || 0) - (b.harga || 0);
+        case "price_desc":
+          return (b.harga || 0) - (a.harga || 0);
         case "name":
-          return a.name.localeCompare(b.name);
+          return (a.name || "").localeCompare(b.name || "");
+        case "name_desc":
+          return (b.name || "").localeCompare(a.name || "");
         default:
           return 0;
       }
     });
 
     return filtered;
-  }, [category, search, sortBy]);
+  }, [products, sortBy]);
 
   const productsData = {
-    products: filteredProducts.slice((page - 1) * 12, page * 12),
-    total: filteredProducts.length,
-    totalPages: Math.ceil(filteredProducts.length / 12),
+    products: filteredProducts,
+    total: totalProducts,
+    totalPages: Math.ceil(totalProducts / 12),
   };
 
-  const productsLoading = false;
-  const categoriesData = { categories: mockCategories };
+  const productsLoading = loading;
+  const categoriesData = { categories };
 
   const updateFilters = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -122,12 +209,18 @@ export default function ProductsPage() {
                   <input type="radio" name="category" value="" checked={!category} onChange={(e) => updateFilters("category", e.target.value)} className="text-blue-600 focus:ring-blue-500" />
                   <span className="ml-2 text-sm text-gray-700">Semua Kategori</span>
                 </label>
-                {categoriesData.categories.map((cat: any) => (
-                  <label key={cat.id} className="flex items-center">
-                    <input type="radio" name="category" value={cat.slug} checked={category === cat.slug} onChange={(e) => updateFilters("category", e.target.value)} className="text-blue-600 focus:ring-blue-500" />
-                    <span className="ml-2 text-sm text-gray-700 capitalize">{cat.name}</span>
-                  </label>
-                ))}
+                {categoriesLoading ? (
+                  <div className="text-sm text-gray-500 italic">Loading categories...</div>
+                ) : categoriesData.categories.length === 0 ? (
+                  <div className="text-sm text-gray-500 italic">No categories available</div>
+                ) : (
+                  categoriesData.categories.map((cat: any) => (
+                    <label key={cat.id} className="flex items-center">
+                      <input type="radio" name="category" value={cat.slug} checked={category === cat.slug} onChange={(e) => updateFilters("category", e.target.value)} className="text-blue-600 focus:ring-blue-500" />
+                      <span className="ml-2 text-sm text-gray-700 capitalize">{cat.name}</span>
+                    </label>
+                  ))
+                )}
               </div>
             </div>
 
@@ -164,10 +257,10 @@ export default function ProductsPage() {
               <div className="text-slate-400 mb-4">
                 <Grid className="h-12 w-12 sm:h-16 sm:w-16 mx-auto" />
               </div>
-              <h3 className="text-lg sm:text-xl font-medium text-slate-900 mb-2">No products found</h3>
-              <p className="text-slate-600 mb-4 text-sm sm:text-base">Try adjusting your search or filter criteria</p>
+              <h3 className="text-lg sm:text-xl font-medium text-slate-900 mb-2">Tidak ada produk ditemukan</h3>
+              <p className="text-slate-600 mb-4 text-sm sm:text-base">Coba sesuaikan pencarian atau filter Anda</p>
               <button onClick={clearFilters} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-6 py-3 rounded-lg font-medium transition-all shadow-lg hover:shadow-xl">
-                Clear Filters
+                Hapus Filter
               </button>
             </div>
           ) : (

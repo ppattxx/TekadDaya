@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { authAPI } from "../services/api";
+import { useAppStore, actions } from "../store/AppContext";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -20,6 +22,7 @@ export default function RegisterPage() {
   }>({});
 
   const navigate = useNavigate();
+  const { dispatch } = useAppStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
@@ -74,22 +77,74 @@ export default function RegisterPage() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+    setErrors({});
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await authAPI.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-        })
-      );
+      if (response.status === "success" && response.data) {
+        if (response.data.token) {
+          localStorage.setItem("auth_token", response.data.token);
+        }
 
-      navigate("/");
+        if (response.data.user) {
+          localStorage.setItem("user", JSON.stringify(response.data.user));
+          dispatch(actions.setUser(response.data.user));
+        }
+
+        navigate("/", { replace: true });
+      } else {
+        let errorMessage = response.message || "Registrasi gagal. Silakan coba lagi.";
+
+        if (response.data?.non_field_errors) {
+          errorMessage = Array.isArray(response.data.non_field_errors) ? response.data.non_field_errors[0] : response.data.non_field_errors;
+        } else if (response.data?.email) {
+          errorMessage = Array.isArray(response.data.email) ? response.data.email[0] : response.data.email;
+        } else if (response.data?.password) {
+          errorMessage = Array.isArray(response.data.password) ? response.data.password[0] : response.data.password;
+        } else if (response.data?.name) {
+          errorMessage = Array.isArray(response.data.name) ? response.data.name[0] : response.data.name;
+        }
+
+        setErrors({
+          general: errorMessage,
+        });
+      }
     } catch (error: any) {
+      let errorMessage = "Registrasi gagal. Silakan coba lagi.";
+      const fieldErrors: typeof errors = {};
+
+      if (error.response?.data) {
+        const errData = error.response.data;
+
+        if (errData.data) {
+          // Check for specific field errors
+          if (errData.data.name) {
+            fieldErrors.name = Array.isArray(errData.data.name) ? errData.data.name[0] : errData.data.name;
+          }
+          if (errData.data.email) {
+            fieldErrors.email = Array.isArray(errData.data.email) ? errData.data.email[0] : errData.data.email;
+          }
+          if (errData.data.password) {
+            fieldErrors.password = Array.isArray(errData.data.password) ? errData.data.password[0] : errData.data.password;
+          }
+          if (errData.data.non_field_errors) {
+            errorMessage = Array.isArray(errData.data.non_field_errors) ? errData.data.non_field_errors[0] : errData.data.non_field_errors;
+          }
+        }
+
+        if (Object.keys(fieldErrors).length === 0 && errData.message) {
+          errorMessage = errData.message;
+        }
+      }
+
       setErrors({
-        general: "Registration failed. Please try again.",
+        ...fieldErrors,
+        general: Object.keys(fieldErrors).length === 0 ? errorMessage : undefined,
       });
     } finally {
       setIsSubmitting(false);

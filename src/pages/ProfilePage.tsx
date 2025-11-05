@@ -2,17 +2,68 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User, MapPin, Phone, Mail, Package2, Heart, Settings, LogOut, Edit3, Camera, Shield, CreditCard, Bell, ArrowRight } from "lucide-react";
 import { useAppStore, actions } from "../store/AppContext";
+import { authAPI, orderAPI } from "../services/api";
 
 export default function ProfilePage() {
   const { state, dispatch } = useAppStore();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
+    if (!(state as any).isInitialized) {
+      return;
+    }
+
     if (!state.isAuthenticated) {
       navigate("/login");
+      return;
     }
-  }, [state.isAuthenticated, navigate]);
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        try {
+          const profileResponse = await authAPI.getProfile();
+
+          if (profileResponse.status === "success" && profileResponse.data) {
+            setProfile(profileResponse.data);
+            dispatch(actions.setUser(profileResponse.data));
+          }
+        } catch (profileError: any) {
+          if (profileError.response?.status === 401) {
+            dispatch(actions.setUser(null));
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("user");
+            navigate("/login");
+            return;
+          }
+
+          setProfile(state.user);
+        }
+
+        try {
+          const ordersResponse = await orderAPI.getOrders({ limit: 3 });
+
+          if (ordersResponse.status === "success" && ordersResponse.data) {
+            const ordersData = Array.isArray(ordersResponse.data) ? ordersResponse.data : (ordersResponse.data as any).orders || (ordersResponse.data as any).products || [];
+            setOrders(ordersData.slice(0, 3));
+          }
+        } catch (orderError) {
+          setOrders([]);
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [state.isAuthenticated, navigate, dispatch]);
 
   const handleLogout = () => {
     dispatch(actions.setUser(null));
@@ -21,41 +72,25 @@ export default function ProfilePage() {
     navigate("/");
   };
 
-  const mockUserData = {
-    name: state.user?.name || "John Doe",
-    email: state.user?.email || "john.doe@example.com",
-    phone: "+62 812-3456-7890",
-    avatar: state.user?.avatar || null,
-    address: "Jl. Sudirman No. 123, Jakarta Pusat, DKI Jakarta 10270",
-    joinDate: "Bergabung sejak Januari 2024",
-    totalOrders: 12,
-    totalSpent: 2450000,
-    membershipLevel: "Gold Member",
+  const userData = {
+    name: profile?.username || profile?.name || (state.user as any)?.name || (state.user as any)?.username || "User",
+    email: profile?.email || state.user?.email || "",
+    phone: profile?.phone || (state.user as any)?.phone || "",
+    avatar: profile?.avatar || state.user?.avatar || null,
+    address: profile?.address || (state.user as any)?.address || "",
+    joinDate: profile?.date_joined || profile?.created_at ? `Bergabung sejak ${new Date(profile.date_joined || profile.created_at).toLocaleDateString("id-ID", { year: "numeric", month: "long" })}` : "",
+    totalOrders: orders.length,
+    totalSpent: orders.reduce((sum: number, order: any) => sum + (order.total || order.total_amount || 0), 0),
+    membershipLevel: profile?.membership_level || profile?.level || "",
   };
 
-  const recentOrders = [
-    {
-      id: "ORD-001",
-      date: "2024-10-15",
-      status: "delivered",
-      total: 185000,
-      items: 3,
-    },
-    {
-      id: "ORD-002",
-      date: "2024-10-10",
-      status: "shipped",
-      total: 95000,
-      items: 1,
-    },
-    {
-      id: "ORD-003",
-      date: "2024-10-05",
-      status: "processing",
-      total: 245000,
-      items: 5,
-    },
-  ];
+  const recentOrders = orders.map((order: any) => ({
+    id: order.id || order.order_number || order.order_id || "",
+    date: order.created_at || order.date || order.order_date || "",
+    status: order.status || "",
+    total: order.total || order.total_amount || 0,
+    items: order.items?.length || order.item_count || 0,
+  }));
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -87,6 +122,17 @@ export default function ProfilePage() {
     return null;
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white pt-16 sm:pt-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Memuat profil...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white pt-16 sm:pt-20">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
@@ -94,10 +140,8 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
             <div className="relative mx-auto sm:mx-0">
               <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-200 rounded-full overflow-hidden">
-                {mockUserData.avatar ? (
-                  <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-slate-300 to-slate-400 rounded-full"></div>
-                  </div>
+                {userData.avatar ? (
+                  <img src={userData.avatar} alt={userData.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-amber-100">
                     <User className="h-8 w-8 sm:h-12 sm:w-12 text-amber-600" />
@@ -110,28 +154,34 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{mockUserData.name}</h1>
-              <p className="text-gray-600 flex items-center mt-1">
-                <Mail className="h-4 w-4 mr-2" />
-                {mockUserData.email}
-              </p>
-              <p className="text-gray-600 flex items-center mt-1">
-                <Phone className="h-4 w-4 mr-2" />
-                {mockUserData.phone}
-              </p>
-              <p className="text-sm text-gray-500 mt-2">{mockUserData.joinDate}</p>
-              <div className="flex items-center mt-2">
-                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{mockUserData.membershipLevel}</span>
-              </div>
+              <h1 className="text-2xl font-bold text-gray-900">{userData.name}</h1>
+              {userData.email && (
+                <p className="text-gray-600 flex items-center mt-1">
+                  <Mail className="h-4 w-4 mr-2" />
+                  {userData.email}
+                </p>
+              )}
+              {userData.phone && (
+                <p className="text-gray-600 flex items-center mt-1">
+                  <Phone className="h-4 w-4 mr-2" />
+                  {userData.phone}
+                </p>
+              )}
+              {userData.joinDate && <p className="text-sm text-gray-500 mt-2">{userData.joinDate}</p>}
+              {userData.membershipLevel && (
+                <div className="flex items-center mt-2">
+                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{userData.membershipLevel}</span>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>
-                <p className="text-2xl font-bold text-gray-900">{mockUserData.totalOrders}</p>
+                <p className="text-2xl font-bold text-gray-900">{userData.totalOrders}</p>
                 <p className="text-sm text-gray-600">Pesanan</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">Rp{mockUserData.totalSpent.toLocaleString("id-ID")}</p>
+                <p className="text-2xl font-bold text-gray-900">{userData.totalSpent > 0 ? `Rp${userData.totalSpent.toLocaleString("id-ID")}` : "Rp0"}</p>
                 <p className="text-sm text-gray-600">Total Belanja</p>
               </div>
             </div>
@@ -219,23 +269,38 @@ export default function ProfilePage() {
                     </Link>
                   </div>
 
-                  <div className="space-y-4">
-                    {recentOrders.map((order) => (
-                      <div key={order.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-gray-900">#{order.id}</p>
-                            <p className="text-sm text-gray-600">{order.date}</p>
-                            <p className="text-sm text-gray-600">{order.items} item(s)</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-gray-900">Rp{order.total.toLocaleString("id-ID")}</p>
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>{getStatusText(order.status)}</span>
+                  {recentOrders.length > 0 ? (
+                    <div className="space-y-4">
+                      {recentOrders.map((order) => (
+                        <div key={order.id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-gray-900">#{order.id}</p>
+                              {order.date && (
+                                <p className="text-sm text-gray-600">
+                                  {new Date(order.date).toLocaleDateString("id-ID", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  })}
+                                </p>
+                              )}
+                              <p className="text-sm text-gray-600">{order.items} item(s)</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-gray-900">Rp{order.total.toLocaleString("id-ID")}</p>
+                              {order.status && <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>{getStatusText(order.status)}</span>}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Package2 className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500">Belum ada pesanan</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -243,10 +308,41 @@ export default function ProfilePage() {
             {activeTab === "orders" && (
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-6">Riwayat Pesanan</h2>
-                <div className="text-center py-12">
-                  <Package2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">Fitur riwayat pesanan sedang dalam pengembangan</p>
-                </div>
+                {recentOrders.length > 0 ? (
+                  <div className="space-y-4">
+                    {recentOrders.map((order) => (
+                      <div key={order.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-gray-900">#{order.id}</p>
+                            {order.date && (
+                              <p className="text-sm text-gray-600">
+                                {new Date(order.date).toLocaleDateString("id-ID", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })}
+                              </p>
+                            )}
+                            <p className="text-sm text-gray-600">{order.items} item(s)</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-900">Rp{order.total.toLocaleString("id-ID")}</p>
+                            {order.status && <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>{getStatusText(order.status)}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Package2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">Belum ada riwayat pesanan</p>
+                    <Link to="/products" className="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      Mulai Berbelanja
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 

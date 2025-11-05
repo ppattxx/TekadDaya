@@ -55,7 +55,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
 
           <div className="flex items-center justify-between mt-auto bg-slate-50 -mx-8 -mb-8 px-4 py-3 min-h-[60px] gap-3">
-            <div className="text-lg font-bold text-amber-600 flex-shrink-0">{formatPrice(product.harga)}</div>
+            <div className="text-lg font-bold text-amber-600 flex-shrink-0">{formatPrice(product.harga || 0)}</div>
             <button
               onClick={handleAddToCart}
               className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0"

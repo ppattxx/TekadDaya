@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Minus, Plus, ShoppingCart, CreditCard, ArrowLeft, Heart } from "lucide-react";
 import { useAppStore, actions } from "../store/AppContext";
-import { mockProducts } from "../services/mockData";
+import { productAPI } from "../services/api";
 import type { Product, ProductVariant } from "../types";
 
 export default function ProductDetailPage() {
@@ -11,19 +11,51 @@ export default function ProductDetailPage() {
   const { dispatch } = useAppStore();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      const foundProduct = mockProducts.find((p) => p.id === parseInt(id));
-      setProduct(foundProduct || null);
-      if (foundProduct && foundProduct.list_varian && foundProduct.list_varian.length > 0) {
-        setSelectedVariant(foundProduct.list_varian[0]);
+    const fetchProduct = async () => {
+      if (!id) return;
+
+      try {
+        setLoading(true);
+        const response = await productAPI.getById(id);
+
+        if (response.status === "success" && response.data) {
+          const productData = Array.isArray(response.data) ? response.data[0] : response.data;
+          setProduct(productData);
+
+          if (productData.list_varian && productData.list_varian.length > 0) {
+            setSelectedVariant(productData.list_varian[0]);
+          }
+
+          if (productData.category) {
+            const relatedResponse = await productAPI.getAll({
+              category: productData.category,
+              limit: 6,
+            });
+            if (relatedResponse.status === "success") {
+              const related = Array.isArray(relatedResponse.data) ? relatedResponse.data : (relatedResponse.data as any).products || [];
+              setRelatedProducts(related.filter((p: Product) => p.id !== productData.id));
+            }
+          }
+        } else {
+          setProduct(null);
+          setRelatedProducts([]);
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        setProduct(null);
+        setRelatedProducts([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }
+    };
+
+    fetchProduct();
   }, [id]);
 
   const handleQuantityChange = (delta: number) => {
@@ -115,7 +147,7 @@ export default function ProductDetailPage() {
 
           <div className="space-y-6">
             <div>
-              <div className="text-3xl font-bold text-amber-600 mb-2">Rp{product.harga.toLocaleString("id-ID")}</div>
+              <div className="text-3xl font-bold text-amber-600 mb-2">Rp{(product.harga || 0).toLocaleString("id-ID")}</div>
               <h1 className="text-2xl font-semibold text-gray-900 leading-tight">{product.name}</h1>
             </div>
 
@@ -147,11 +179,11 @@ export default function ProductDetailPage() {
                     <Minus className="h-4 w-4" />
                   </button>
                   <span className="px-4 py-2 text-gray-900 font-medium min-w-[3rem] text-center">{quantity}</span>
-                  <button onClick={() => handleQuantityChange(1)} disabled={quantity >= (selectedVariant?.stock || product.stock)} className="p-2 text-gray-600 hover:text-gray-800 disabled:text-gray-300 disabled:cursor-not-allowed">
+                  <button onClick={() => handleQuantityChange(1)} disabled={quantity >= (selectedVariant?.stock || product?.stock || 0)} className="p-2 text-gray-600 hover:text-gray-800 disabled:text-gray-300 disabled:cursor-not-allowed">
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
-                <span className="text-sm text-gray-600">Max: {selectedVariant?.stock || product.stock}</span>
+                <span className="text-sm text-gray-600">Max: {selectedVariant?.stock || product?.stock || 0}</span>
               </div>
             </div>
 
@@ -203,27 +235,24 @@ export default function ProductDetailPage() {
         <div className="mt-12 sm:mt-16">
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-6 sm:mb-8">Produk Lainnya</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-            {mockProducts
-              .filter((p) => p.id !== product.id)
-              .slice(0, 6)
-              .map((otherProduct) => (
-                <div
-                  key={otherProduct.id}
-                  onClick={() => handleProductClick(otherProduct.id)}
-                  className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-slate-200/50 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer"
-                >
-                  <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-                    <div className="text-center p-3 sm:p-4">
-                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-slate-300 to-slate-400 rounded-lg sm:rounded-xl mx-auto mb-1 sm:mb-2 hover:from-amber-400 hover:to-amber-500 transition-all duration-300"></div>
-                      <span className="text-slate-500 text-xs font-medium hidden sm:block">Product</span>
-                    </div>
-                  </div>
-                  <div className="p-2 sm:p-3">
-                    <h3 className="font-medium text-slate-900 text-xs sm:text-sm line-clamp-2 mb-1 sm:mb-2">{otherProduct.name}</h3>
-                    <div className="text-amber-600 font-bold text-xs sm:text-sm">Rp{otherProduct.harga.toLocaleString("id-ID")}</div>
+            {relatedProducts.slice(0, 6).map((otherProduct) => (
+              <div
+                key={otherProduct.id}
+                onClick={() => handleProductClick(otherProduct.id || 0)}
+                className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-slate-200/50 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer"
+              >
+                <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                  <div className="text-center p-3 sm:p-4">
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-slate-300 to-slate-400 rounded-lg sm:rounded-xl mx-auto mb-1 sm:mb-2 hover:from-amber-400 hover:to-amber-500 transition-all duration-300"></div>
+                    <span className="text-slate-500 text-xs font-medium hidden sm:block">Product</span>
                   </div>
                 </div>
-              ))}
+                <div className="p-2 sm:p-3">
+                  <h3 className="font-medium text-slate-900 text-xs sm:text-sm line-clamp-2 mb-1 sm:mb-2">{otherProduct.name}</h3>
+                  <div className="text-amber-600 font-bold text-xs sm:text-sm">Rp{(otherProduct.harga || 0).toLocaleString("id-ID")}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

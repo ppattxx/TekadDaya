@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
-import { mockProducts } from "../services/mockData";
+import { productAPI } from "../services/api";
 import type { Product } from "../types";
 import HeroSection from "../components/HeroSection";
 import { useScrolled } from "../hooks/useScrolled";
@@ -12,15 +12,42 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [sortBy, setSortBy] = useState("relevant");
   const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalProducts, setTotalProducts] = useState(0);
   const isScrolled = useScrolled(150);
 
-  const filteredProducts = mockProducts.filter((product: Product) => {
-    const matchesCategory = selectedCategory === "" || product.category === selectedCategory;
-    const matchesSearch = searchQuery === "" || product.name.toLowerCase().includes(searchQuery.toLowerCase()) || product.category.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await productAPI.getAll({
+          limit: 6,
+          category: selectedCategory || undefined,
+          search: searchQuery || undefined,
+        });
 
-  const totalProducts = 41245;
+        if (response.status === "success") {
+          const productsData = Array.isArray(response.data) ? response.data : (response.data as any).products || [];
+          setProducts(productsData);
+          setTotalProducts((response as any).pagination?.total || productsData.length);
+        } else {
+          setProducts([]);
+          setTotalProducts(0);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setProducts([]);
+        setTotalProducts(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [selectedCategory, searchQuery]);
+
+  const filteredProducts = products;
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
@@ -92,61 +119,72 @@ export default function HomePage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 xl:gap-10">
-                {filteredProducts.slice(0, 6).map((product: Product) => (
-                  <Link key={product.id} to={`/products/${product.id}`} className="block">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200/50 overflow-hidden hover:shadow-xl transition-all duration-300 group hover:scale-105 h-full flex flex-col cursor-pointer">
-                      <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center relative overflow-hidden">
-                        <div className="text-center p-8">
-                          <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br from-slate-300 to-slate-400 rounded-2xl mx-auto mb-4 group-hover:from-amber-400 group-hover:to-amber-500 transition-all duration-300 shadow-lg"></div>
-                          <span className="text-slate-500 text-base font-medium">Premium Product</span>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      </div>
-
-                      <div className="p-8 flex flex-col flex-grow">
-                        <h3 className="font-bold text-slate-800 mb-6 line-clamp-2 text-xl leading-tight group-hover:text-amber-600 transition-colors">{product.name}</h3>
-
-                        <div className="space-y-3 text-base text-slate-600 mb-8 flex-grow">
-                          {product.volume && (
-                            <p className="flex items-center justify-between">
-                              <span className="font-medium text-slate-500">Volume:</span>
-                              <span className="font-semibold">{product.volume}</span>
-                            </p>
-                          )}
-                          {product.berat && (
-                            <p className="flex items-center justify-between">
-                              <span className="font-medium text-slate-500">Berat:</span>
-                              <span className="font-semibold">{product.berat}</span>
-                            </p>
-                          )}
-                          {product.isiPerPolybag && (
-                            <p className="flex items-center justify-between">
-                              <span className="font-medium text-slate-500">Per bag:</span>
-                              <span className="font-semibold">{product.isiPerPolybag}</span>
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between mt-auto bg-slate-50 -mx-8 -mb-8 px-4 lg:px-6 xl:px-8 py-3 lg:py-4 min-h-[60px] gap-2 lg:gap-4">
-                          <div className="text-lg lg:text-xl font-bold text-amber-600 flex-shrink-0">Rp {product.harga.toLocaleString("id-ID")}</div>
-                          <button
-                            onClick={(e) => handleAddToCart(e, product)}
-                            className="bg-amber-500 hover:bg-amber-600 text-white px-3 lg:px-4 xl:px-6 py-2 lg:py-2.5 rounded-lg text-xs lg:text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0"
-                          >
-                            Tambah +
-                          </button>
+                {loading
+                  ? Array.from({ length: 6 }).map((_, index) => (
+                      <div key={index} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200/50 overflow-hidden animate-pulse">
+                        <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200"></div>
+                        <div className="p-8 space-y-3">
+                          <div className="h-6 bg-slate-200 rounded"></div>
+                          <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                          <div className="h-8 bg-slate-200 rounded w-1/2"></div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                    ))
+                  : filteredProducts.map((product: Product) => (
+                      <Link key={product.id} to={`/products/${product.id}`} className="block">
+                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200/50 overflow-hidden hover:shadow-xl transition-all duration-300 group hover:scale-105 h-full flex flex-col cursor-pointer">
+                          <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center relative overflow-hidden">
+                            <div className="text-center p-8">
+                              <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br from-slate-300 to-slate-400 rounded-2xl mx-auto mb-4 group-hover:from-amber-400 group-hover:to-amber-500 transition-all duration-300 shadow-lg"></div>
+                              <span className="text-slate-500 text-base font-medium">Premium Product</span>
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          </div>
+
+                          <div className="p-8 flex flex-col flex-grow">
+                            <h3 className="font-bold text-slate-800 mb-6 line-clamp-2 text-xl leading-tight group-hover:text-amber-600 transition-colors">{product.name}</h3>
+
+                            <div className="space-y-3 text-base text-slate-600 mb-8 flex-grow">
+                              {product.volume && (
+                                <p className="flex items-center justify-between">
+                                  <span className="font-medium text-slate-500">Volume:</span>
+                                  <span className="font-semibold">{product.volume}</span>
+                                </p>
+                              )}
+                              {product.berat && (
+                                <p className="flex items-center justify-between">
+                                  <span className="font-medium text-slate-500">Berat:</span>
+                                  <span className="font-semibold">{product.berat}</span>
+                                </p>
+                              )}
+                              {product.isiPerPolybag && (
+                                <p className="flex items-center justify-between">
+                                  <span className="font-medium text-slate-500">Per bag:</span>
+                                  <span className="font-semibold">{product.isiPerPolybag}</span>
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center justify-between mt-auto bg-slate-50 -mx-8 -mb-8 px-4 lg:px-6 xl:px-8 py-3 lg:py-4 min-h-[60px] gap-2 lg:gap-4">
+                              <div className="text-lg lg:text-xl font-bold text-amber-600 flex-shrink-0">Rp {(product.harga || 0).toLocaleString("id-ID")}</div>
+                              <button
+                                onClick={(e) => handleAddToCart(e, product)}
+                                className="bg-amber-500 hover:bg-amber-600 text-white px-3 lg:px-4 xl:px-6 py-2 lg:py-2.5 rounded-lg text-xs lg:text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0"
+                              >
+                                Tambah +
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
               </div>
 
-              {filteredProducts.length === 0 && (
+              {filteredProducts.length === 0 && !loading && (
                 <div className="text-center py-16 col-span-full">
                   <div className="w-24 h-24 bg-gradient-to-br from-slate-200 to-slate-300 rounded-2xl mx-auto mb-4"></div>
-                  <p className="text-slate-500 text-lg font-medium">No products found</p>
-                  <p className="text-slate-400 text-sm mt-2">Try adjusting your search or filter criteria</p>
+                  <p className="text-slate-500 text-lg font-medium">Tidak ada produk ditemukan</p>
+                  <p className="text-slate-400 text-sm mt-2">Coba sesuaikan pencarian atau filter Anda</p>
                 </div>
               )}
             </main>

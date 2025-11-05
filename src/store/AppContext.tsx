@@ -6,6 +6,7 @@ interface AppState {
   isAuthenticated: boolean;
   cart: Cart;
   loading: boolean;
+  isInitialized: boolean;
 }
 
 type AppAction =
@@ -17,16 +18,49 @@ type AppAction =
   | { type: "CLEAR_CART" }
   | { type: "SET_CART"; payload: Cart };
 
-const initialState: AppState = {
-  user: null,
-  isAuthenticated: false,
-  cart: {
-    items: [],
-    total: 0,
-    itemCount: 0,
-  },
-  loading: false,
+const getInitialState = (): AppState => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    const authToken = localStorage.getItem("auth_token");
+
+    console.log("Initializing app state from localStorage");
+    console.log("Stored user:", storedUser);
+    console.log("Auth token exists:", !!authToken);
+
+    if (storedUser && authToken) {
+      const user = JSON.parse(storedUser);
+      console.log("User restored from localStorage:", user);
+      return {
+        user,
+        isAuthenticated: true,
+        cart: {
+          items: [],
+          total: 0,
+          itemCount: 0,
+        },
+        loading: false,
+        isInitialized: true,
+      };
+    }
+  } catch (error) {
+    console.error("Error reading from localStorage:", error);
+  }
+
+  console.log("No stored user found, using default state");
+  return {
+    user: null,
+    isAuthenticated: false,
+    cart: {
+      items: [],
+      total: 0,
+      itemCount: 0,
+    },
+    loading: false,
+    isInitialized: true,
+  };
 };
+
+const initialState: AppState = getInitialState();
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
@@ -54,7 +88,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         newItems = [...state.cart.items, { id: Date.now(), product, quantity }];
       }
 
-      const total = newItems.reduce((sum, item) => sum + item.product.harga * item.quantity, 0);
+      const total = newItems.reduce((sum, item) => sum + (item.product.harga || 0) * item.quantity, 0);
       const itemCount = newItems.reduce((sum, item) => sum + item.quantity, 0);
 
       return {
@@ -71,7 +105,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       const { id, quantity } = action.payload;
       const newItems = quantity > 0 ? state.cart.items.map((item) => (item.id === id ? { ...item, quantity } : item)) : state.cart.items.filter((item) => item.id !== id);
 
-      const total = newItems.reduce((sum, item) => sum + item.product.harga * item.quantity, 0);
+      const total = newItems.reduce((sum, item) => sum + (item.product.harga || 0) * item.quantity, 0);
       const itemCount = newItems.reduce((sum, item) => sum + item.quantity, 0);
 
       return {
@@ -86,7 +120,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
     case "REMOVE_FROM_CART": {
       const newItems = state.cart.items.filter((item) => item.id !== action.payload);
-      const total = newItems.reduce((sum, item) => sum + item.product.harga * item.quantity, 0);
+      const total = newItems.reduce((sum, item) => sum + (item.product.harga || 0) * item.quantity, 0);
       const itemCount = newItems.reduce((sum, item) => sum + item.quantity, 0);
 
       return {

@@ -1,13 +1,23 @@
 export interface Product {
   id: number;
   name: string;
-  description: string;
-  harga: number;
-  image: string;
-  category: string;
-  stock: number;
-  rating: number;
-  reviews: number;
+  slug?: string;
+  description?: string;
+  short_description?: string;
+  category?: string;
+  category_name?: string;
+  harga?: number; 
+  price?: string | number; 
+  discount_price?: string | number | null;
+  current_price?: number;
+  image?: string;
+  primary_image?: string | null;
+  stock?: number;
+  is_in_stock?: boolean;
+  status?: string;
+  is_featured?: boolean;
+  rating?: number;
+  reviews?: number;
   volume?: string; 
   berat?: string; 
   isiPerPolybag?: number;
@@ -16,6 +26,8 @@ export interface Product {
   fungsi?: string[];
   list_varian?: ProductVariant[];
   placeholder_gambar?: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ProductVariant {
@@ -23,6 +35,15 @@ export interface ProductVariant {
   name: string;
   value: string;
   stock: number;
+}
+
+export interface Category {
+  id?: number;
+  name: string;
+  slug: string;
+  description?: string;
+  image?: string;
+  product_count?: number;
 }
 
 export interface User {
@@ -72,17 +93,25 @@ export interface Address {
 }
 
 export interface ApiResponse<T> {
+  status?: string;
   data: T;
-  message: string;
-  success: boolean;
+  message?: string;
+  success?: boolean;
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    current_page: number;
-    per_page: number;
-    total: number;
-    total_pages: number;
-  };
+  status?: string;
+  data: T[] | { products?: T[]; pagination?: PaginationInfo };
+  message?: string;
+  pagination?: PaginationInfo;
+}
+
+export interface PaginationInfo {
+  count?: number;
+  next?: string | null;
+  previous?: string | null;
+  current_page?: number;
+  per_page?: number;
+  total?: number;
+  total_pages?: number;
 }

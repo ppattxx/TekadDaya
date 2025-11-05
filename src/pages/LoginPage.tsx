@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { authAPI } from "../services/api";
+import { useAppStore, actions } from "../store/AppContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -10,6 +12,7 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { dispatch } = useAppStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const from = location.state?.from?.pathname || "/";
@@ -39,27 +42,56 @@ export default function LoginPage() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+    setErrors({});
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await authAPI.login({ email, password });
 
-      if (email === "demo@example.com" && password === "password") {
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            name: "Demo User",
-            email: email,
-          })
-        );
+      if (response.status === "success" && response.data) {
+        if (response.data.token) {
+          localStorage.setItem("auth_token", response.data.token);
+        }
+
+        if (response.data.user) {
+          const userString = JSON.stringify(response.data.user);
+          localStorage.setItem("user", userString);
+          dispatch(actions.setUser(response.data.user));
+        }
+
         navigate(from, { replace: true });
       } else {
         setErrors({
-          general: "Invalid email or password. Try demo@example.com / password",
+          general: response.message || "Login gagal. Silakan coba lagi.",
         });
       }
     } catch (error: any) {
+      let errorMessage = "Login gagal. Silakan coba lagi.";
+
+      if (error.response?.data) {
+        const errData = error.response.data;
+
+        if (errData.message) {
+          errorMessage = errData.message;
+        }
+
+        if (errData.data) {
+          if (errData.data.email) {
+            errorMessage = Array.isArray(errData.data.email) ? errData.data.email[0] : errData.data.email;
+          }
+          if (errData.data.username) {
+            errorMessage = Array.isArray(errData.data.username) ? errData.data.username[0] : errData.data.username;
+          }
+          if (errData.data.password) {
+            errorMessage = Array.isArray(errData.data.password) ? errData.data.password[0] : errData.data.password;
+          }
+          if (errData.data.non_field_errors) {
+            errorMessage = Array.isArray(errData.data.non_field_errors) ? errData.data.non_field_errors[0] : errData.data.non_field_errors;
+          }
+        }
+      }
+
       setErrors({
-        general: "Login failed. Please try again.",
+        general: errorMessage,
       });
     } finally {
       setIsSubmitting(false);
