@@ -20,7 +20,6 @@ export default function HeroSection({ searchQuery, setSearchQuery, isScrolled }:
         <div className={`text-center mb-6 sm:mb-8 lg:mb-10 transition-all duration-500 ease-in-out ${isScrolled ? "opacity-0 transform translate-y-8 pointer-events-none" : "opacity-100 transform translate-y-0"}`}>
           <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-3 sm:mb-4 lg:mb-6 tracking-tight">
             <span className="block">BELI BOTOL</span>
-            {/* <span className="block text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-normal text-blue-100 mt-1 sm:mt-2"></span> */}
           </h1>
           <p className="text-sm sm:text-base md:text-lg lg:text-xl text-blue-100 max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto leading-relaxed px-2 sm:px-0">
             Temukan produk berkualitas premium dengan keandalan tak tertandingi dan layanan profesional

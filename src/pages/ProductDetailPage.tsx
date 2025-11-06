@@ -80,7 +80,6 @@ export default function ProductDetailPage() {
   };
 
   const handleProductClick = (productId: number) => {
-    window.scrollTo(0, 0);
     navigate(`/products/${productId}`);
   };
 

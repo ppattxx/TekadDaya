@@ -13,11 +13,8 @@ export default function CartPage() {
         try {
           const response = await cartAPI.getCart();
           if (response.status === "success" && response.data) {
-            // Update local cart with server cart
           }
-        } catch (error) {
-          // Silent fail - cart will use local storage
-        }
+        } catch (error) {}
       }
     };
 

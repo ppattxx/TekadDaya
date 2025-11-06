@@ -16,11 +16,27 @@ const normalizeProduct = (product: any): Product => {
     return {} as Product;
   }
 
+  const getFirstNonEmpty = (...values: any[]): string => {
+    for (const val of values) {
+      if (val && typeof val === 'string' && val.trim() !== '') {
+        return val.trim();
+      }
+    }
+    return '';
+  };
+
   return {
     ...product,
     id: product.id,
-    name: product.name || product.product_name || product.title || '',
-    description: product.description || product.short_description || product.long_description || '',
+    name: getFirstNonEmpty(product.name, product.product_name, product.title),
+    description: getFirstNonEmpty(
+      product.description, 
+      product.long_description,
+      product.short_description,
+      product.detail,
+      product.product_description,
+      'Deskripsi produk tidak tersedia.'
+    ),
     category: product.category || product.category_name || product.category_id || '',
     category_id: product.category_id || product.category?.id || null,
     category_name: product.category_name || product.category || '',
@@ -99,7 +115,6 @@ export const productAPI = {
           products = normalizeProducts((data.data as any).results);
         }
         
-        // Filter by category on frontend
         if (params?.category && products.length > 0) {
           const filterCategory = params.category.toLowerCase().replace(/[-_]/g, ' ').trim();
           
@@ -162,7 +177,6 @@ export const productAPI = {
           return data;
         }
       } catch (directError: any) {
-        // Try fallback method
       }
       
       const allProductsResponse = await api.get<PaginatedResponse<Product>>('/products/');
